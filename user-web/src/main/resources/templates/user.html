@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>用户</title>
+   <link rel="stylesheet" th:href="@{/webjars/bootstrap/3.3.7/dist/css/bootstrap.css}">
+    <script th:src="@{/webjars/jquery/3.5.1/dist/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/3.3.7/dist/js/bootstrap.min.js}"></script>
+    <script type="text/javascript" src="../vue/vue.min.js"></script>
+    <script type="text/javascript" src="../bootstrap/bootstrap-paginator.js"></script>
+    <link rel="stylesheet" th:href="@{/bootstrap/bootstrap.css}" />
+    <link rel="stylesheet" th:href="@{/bootstrap/bootstrap-table.css}" />
+    <script type="text/javascript" src="../jquery-1.8.0.js"></script>
+    <script type="text/javascript" src="../vue/vue.min.js"></script>
+    <script type="text/javascript" src="../bootstrap/bootstrap-paginator.js"></script>
+</head>
+<body>
+<form id="listForm" action="http://localhost:8080/shopxxb2b2c/admin/store_rank/list" method="get">
+    <div class="pull-left">
+        <div class="form-group form-inline">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal" v-on:click="user = {}"><i class="fa fa-file-o"></i> 新建</button>
+                <button type="button" class="btn btn-default" title="删除" onclick="deleteUser()"><i class="fa fa-trash-o"></i> 删除</button>
+                <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+            </div>
+        </div>
+    </div>
+    <div id="app" class="container">
+        <form action="" id="list_form">
+            <div class="form-group">
+                <label for="userName" class="col-sm-1 control-label">名称：</label>
+                <div class="col-sm-2">
+                    <input type="text" class="form-control" id="name" v-model="name" placeholder="请输入名字">
+                </div>
+            </div>
+            <button type="button" class="btn btn-default" onclick="searchUserList()">搜索</button>
+        </form>
+        <br>
+        <table class="table table-bordered">
+            <tr>
+                <th class="" style="padding-right:0px">
+                    <input id="selall" type="checkbox" class="icheckbox_square-blue">
+                </th>
+                <th>名称</th>
+                <th>部门</th>
+                <th>入职日期</th>
+                <th>岗位</th>
+                <th>职责</th>
+                <th>操作</th>
+            </tr>
+            <tr v-for="user in userList">
+                <td>
+                    <input  type="checkbox" v-on:click="updateSelection($event, user.userId)">
+                </td>
+                <td>{{user.userName}}</td>
+                <td>
+                    <div v-if="user.typeId == 1">
+                        开发部
+                    </div>
+                    <div v-if="user.typeId == 2">
+                        财务部
+                    </div>
+                    <div v-if="user.typeId == 3">
+                        人事部
+                    </div>
+                </td>
+                <td>{{user.createTime}}</td>
+                <td>{{user.gangWei}}</td>
+                <td>{{user.zhiZe}}</td>
+                <td>
+                    <a data-toggle="modal" data-target="#editModal" @click="findOne(user.userId)">[编辑]</a> |
+                    <a @click="deleteUser(user.userId)">[删除]</a>
+                </td>
+            </tr>
+        </table>
+        <div id="example" style="text-align: right"> <ul id="pageLimit"></ul> </div>
+    </div>
+    <input type="hidden" id="pageSize" name="pageSize" value="20">
+    <input type="hidden" id="searchProperty" name="searchProperty" value="name">
+    <input type="hidden" id="orderProperty" name="orderProperty" value="">
+    <input type="hidden" id="orderDirection" name="orderDirection" value="">
+</form>
+<!-- 编辑窗口 -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content">
+            <form id="userForm" >
+                <div class="modal-body">
+                    <table class="table table-bordered table-striped"  width="800px">
+                        <tr>
+                            <td>名称</td>
+                            <td><input id="userName" name="userName" class="form-control" placeholder="名称">  </td>
+                        </tr>
+                        <tr>
+                            <td>密码</td>
+                            <td><input id="passWord" name="passWord" class="form-control" placeholder="密码" >  </td>
+                        </tr>
+                        <tr>
+                            <td>部门</td>
+                            <td> <div class="col-sm-10">
+                                <select data-placeholder="请选择部门"  id="typeId"  name="typeId"   class="form-control chosen-select" style="width: 100%; "  required >
+                                    <option   value=""   selected>请选择</option>
+                                    <option  name="typeId"  th:value="1"  th:text="开发部" ></option>
+                                    <option  name="typeId"  th:value="2"  th:text="财务部" ></option>
+                                    <option  name="typeId"  th:value="3"  th:text="人事部" ></option>
+                                </select>
+                            </div></td>
+                           <!-- <td>部门</td>
+                            <td><input id="typeId" name="typeId" class="form-control" placeholder="部门" >
+                            </td>-->
+                        </tr>
+                        <tr>
+                            <td>入职日期</td>
+                            <td><input id="createTime" name="createTime" class="form-control" placeholder="入职日期" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>岗位</td>
+                            <td><input id="gangWei" name="gangWei" class="form-control" placeholder="岗位" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>职责</td>
+                            <td><input id="zhiZe" name="zhiZe" class="form-control" placeholder="职责" >
+                            </td>
+                        </tr>
+                        <input style="display:none" id="userId" name="userId">
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" onclick="saveUser()">保存</button>
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            userList: "",
+        }
+    })
+    function saveUser(){
+        $.ajax({
+            url:"../user/addUser",
+            type:"post",
+            data:$("#userForm").serialize(),
+            datatype:'json',
+            success:function(){
+                searchUserList();
+            },
+        });
+    }
+    function deleteUser(userId){
+        $.ajax({
+            url:"../user/deleteUser",
+            type:"post",
+            data:{userId:userId},
+            datatype:'json',
+            success:function(){
+                searchUserList();
+            },
+        });
+    }
+    $(function() {
+        searchUserList();
+    })
+    function searchUserList() {
+        $.ajax({
+            type:"post",
+            url:"../user/findList",
+            data:{"currPage":vm.currPage,"pageSize":vm.pageSize,"username":vm.username},
+            dataType:"json",
+            success: function(result) {
+                vm.userList = result;
+            },
+            error : function() {
+                alert("系统错误，请联系管理员！");
+            }
+        })
+    }
+
+    vm.selectIds = [];
+    //复选框选中
+    function updateSelection($event, userId) {
+        if ($event.target.checked) {
+            vm.selectIds.push(userId);
+        } else {
+            var idx = vm.selectIds.indexOf(userId);
+            vm.selectIds.splice(idx, 1);//删除
+        }
+
+        console.info(vm.selectIds.toString());
+    }
+    //修改回显
+    function findOne(id) {
+        $.ajax({
+            type:'post',
+            url:'../user/findById',
+            data:{userId: id},
+            dataType: 'json',
+            success: function (result) {
+                console.log(result)
+                $("#userId").val(result.userId);
+                $("#userName").val(result.userName);
+                $("#passWord").val(result.passWord);
+                $("#typeId").val(result.typeId);
+                $("#createTime").val(result.createTime);
+                $("#gangWei").val(result.gangWei);
+                $("#zhiZe").val(result.zhiZe);
+            },
+            error: function () {
+                alert("系统错误，请联系管理员！");
+            }
+        })
+    }
+</script>
+</html>
